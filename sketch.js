@@ -8,6 +8,12 @@ let tryJump;
 let canJump;
 let walls;
 
+function preload()
+{
+  let spriteSheet = loadSpriteSheet('spriteSheet.png', 32, 32, 8);
+
+}
+
 function setup() {
   new Canvas(800, 400);
   world.gravity.y = 20;
