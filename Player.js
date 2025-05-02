@@ -1,16 +1,19 @@
 let direction;
 let jumping;
 
+let coyoteTime;
+let jumpBuffer;
+let tryJump;
+let canJump;
+
+const JUMP_BUFFER_TIME = 100;
+const COYOTE_TIME = 100;
+
 class Player
 {
     constructor(x, y)
     {
         this.sprite = new Sprite(x, y, 32, 33);
-
-
-        this.sprite.color = 'orange';
-        this.sprite.bounciness = 0;
-
 
         this.loadAnimations();
         this.sprite.width = 20;
@@ -19,9 +22,14 @@ class Player
         this.sprite.scale = 2;
         this.sprite.removeColliders();
         this.sprite.addCollider(0, 12, 32, 24);
+        this.sprite.collider = 'dynamic';
+        this.sprite.bounciness = 0;
 
         this.direction = 1;
         this.jumping = false;
+        this.tryJump = false;
+        this.coyoteTime = 0;
+        this.jumpBuffer = 0;
 
         this.sprite.debug = true;
     }
@@ -45,6 +53,9 @@ class Player
     update()
     {
         this.sprite.rotation = 0;
+
+        this.coyoteTime += deltaTime;
+        this.jumpBuffer -= deltaTime;
 
         if(direction == 1)
         {
@@ -73,12 +84,24 @@ class Player
 
         if(kb.presses('space'))
         {
-            this.jump();
+            this.tryJump = true;
+            this.jumpBuffer = JUMP_BUFFER_TIME;
+
+            if(this.sprite.colliding(colliders) || this.coyoteTime < COYOTE_TIME)
+            {
+                this.jump();
+            }
         }
+
+        // if(tryJump && this.jumpBuffer < JUMP_BUFFER_TIME)
+        // {
+        //     this.jump();
+        // }
 
         if(this.jumping)
         {
-            print(this.sprite.ani.frame);
+            this.sprite.ani.offset.y = 4;
+
             if(this.sprite.ani.frame == 3)
             {
                 this.sprite.ani.loop = false;
@@ -86,13 +109,38 @@ class Player
             }
         }
 
+        //clamp downard bounce after landing
+        // if (this.sprite.vel.y > 0 && this.sprite.colliding(colliders)) 
+        // {
+        //     this.sprite.vel.y = 0;
+        // }
 
-        for (let platform of platforms)
+        if(this.sprite.vel.y > 2)
         {
-            if(this.sprite.collides(platform))
+            this.sprite.ani.offset.y = 4;
+            this.sprite.changeAni('jump');
+            this.sprite.ani.frame = 3;
+        }
+
+        // if(this.sprite.vel.y < -3 && !jumping)
+        // {
+        //     this.sprite.ani.offset.y = 4;
+        //     this.sprite.changeAni('jump');
+        // }
+
+        if(this.sprite.collides(colliders))
+        {
+            this.jumping = false;
+
+            if(this.tryJump && this.jumpBuffer < JUMP_BUFFER_TIME)
             {
-                this.jumping = false;
+                this.jump();
             }
+        }   
+
+        if(this.sprite.colliding(colliders))
+        {
+            this.coyoteTime = 0;
         }
     }
 
@@ -101,7 +149,11 @@ class Player
         if(!this.jumping)
         {
             this.sprite.ani.offset.y = 1;
-            this.sprite.changeAni('run');
+
+            if(this.sprite.colliding(colliders))
+            {
+                this.sprite.changeAni('run');
+            }
         }
 
         this.sprite.vel.x = 5 * direction;
@@ -111,20 +163,31 @@ class Player
     {
         if (!this.jumping)
         {
-            this.sprite.ani.offset.y = -2;
-            this.sprite.changeAni('idle');
+            if(this.sprite.colliding(colliders))
+            {
+                this.sprite.ani.offset.y = -2;
+                this.sprite.changeAni('idle');
+            }
         }
     }
 
     jump()
     {
-        this.jumping = true;
-        this.sprite.changeAni('jump');
+        //if ((tryJump && this.sprite.colliding(colliders) && jumpBuffer > 0) || coyoteTime < 150)
+        {
+            this.coyoteTime = 0;
+            this.jumpBuffer = 0;
 
-        this.sprite.ani.frame = 1;         // start at first frame
-        this.sprite.ani.playing = true;    // ensure it's playing
-        this.sprite.ani.loop = true;       // allow it to play once
-        
-        this.sprite.vel.y = -8;
+            this.jumping = true;
+            this.sprite.changeAni('jump');
+    
+            this.sprite.ani.frame = 1;
+            this.sprite.ani.playing = true;
+            this.sprite.ani.loop = true; 
+
+            this.sprite.vel.y = -8;
+            this.tryJump = false;
+        }
+
     }
 }

@@ -1,17 +1,14 @@
 let platforms;
 let p;
+let c;
 
 class Game {
     constructor() {
-      
+
       this.p = new Platform();
-      this.player = new Player(100, 100);
+      this.c = new Colliders();
 
-  
-
-
-      //this.Collider = new Colliders(platforms);
-      
+      this.player = new Player(100, 550);
     }
   
     update() {
