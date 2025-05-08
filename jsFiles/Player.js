@@ -276,7 +276,7 @@ class Player
 
     jump()
     {
-        jumoSound.setVolume(0.3);
+        jumpSound.setVolume(0.3);
         jumpSound.play();
 
         //if ((tryJump && this.sprite.colliding(colliders) && jumpBuffer > 0) || coyoteTime < 150)
